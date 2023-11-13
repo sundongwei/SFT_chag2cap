@@ -6,12 +6,16 @@
 import argparse
 import os
 import time
-
 import json
 
+import numpy as np
 import torch
-
 import torch.nn as nn
+from torch.utils import data
+
+from utils.LEVIR_CC_Data import LEVIR_CC_Dataset
+
+from torch.nn.utils.rnn import pack_padded_sequence
 
 
 def main(args):
@@ -66,8 +70,16 @@ def main(args):
 
     # Custom DataLoad
     if args.data_name == 'LEVIR-CC':
-        train_dataloader = LEVIR_CC_DataLoader(args.list_path, word_map, args.batch_size, args.num_workers)
-        valid_dataloader = LEVIR_CC_DataLoader(args.list_path, word_map, args.batch_size, args.num_workers)
+        train_dataloader = data.DataLoader(LEVIR_CC_Dataset(args.data_path, args.list_path, split='train',
+                                                            token_folder=args.token_folder, vocab_file=args.vocab_file,
+                                                            max_length=args.max_length, allow_unknown=args.allow_unknown),
+                                           batch_size=args.train_batch_size, shuffle=True, num_workers=args.num_workers,
+                                           pin_memory=True)
+        valid_dataloader = data.DataLoader(LEVIR_CC_Dataset(args.data_path, args.list_path, split='val',
+                                                            token_folder=args.token_folder, vocab_file=args.vocab_file,
+                                                            max_length=args.max_length, allow_unknown=args.allow_unknown),
+                                           batch_size=args.valid_batch_size, shuffle=True, num_workers=args.num_workers,
+                                           pin_memory=True)
 
     elif args.data_name == 'Dubai_CC':
         train_dataloader = Dubai_CC_DataLoader(args.list_path, word_map, args.batch_size, args.num_workers)
@@ -77,10 +89,108 @@ def main(args):
     encoder_lr_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=1, gamma=0.95)
     generator_lr_scheduler = torch.optim.lr_scheduler.StepLR(generator_optimizer, step_size=1, gamma=0.95)
 
+    # track metric variable
+    index_i = 0
+    hist = np.zeros(args.num_epochs * len(train_dataloader), 3)
+
     # Start Training
     for epoch in range(start_epoch, args.num_epochs):
         for id, (imgA, imgB, _, _, token, token_len, _) in enumerate(train_dataloader):
-            pass
+            start_time = time.time()
+            extractor.train()
+            encoder.train()
+            generator.train()
+
+            if extractor_optimizer is not None:
+                extractor_optimizer.zero_grad()
+            encoder_optimizer.zero_grad()
+            generator_optimizer.zero_grad()
+
+            # Move Data to GPU
+
+            imgA = imgA.cuda()
+            imgB = imgB.cuda()
+
+            token = token.sequeeze(1).cuda()
+            token_len = token_len.cuda()
+
+            feat_A, feat_B = extractor(imgA, imgB)
+            feat_A, feat_B = encoder(feat_A, feat_B)
+            score, caps_sorted, decode_lengths, alphas, sort_ind = generator(feat_A, feat_B, token, token_len)
+
+            targets =  caps_sorted[:, 1:]
+            scores = pack_padded_sequence(score, decode_lengths, batch_first=True).data
+            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
+
+            # Calculate loss
+            loss = criterion(scores, targets)
+
+            # Backward pass
+            loss.backward()
+
+            # Clip gradients
+            if args.grad_clip is not None:
+                torch.nn.utils.clip_grad_value_(encoder.parameters(), args.grad_clip)
+                torch.nn.utils.clip_grad_value_(generator.parameters(), args.grad_clip)
+                if encoder_optimizer is not None:
+                    torch.nn.utils.clip_grad_value_(extractor.parameters(), args.grad_clip)
+
+            # Update weights
+            generator_optimizer.step()
+            encoder_optimizer.step()
+            if extractor_optimizer is not None:
+                extractor_optimizer.step()
+
+            # keep track metric
+            hist[index_i, 0] = time.time() - start_time
+            hist[index_i, 1] = loss.item()
+            hist[index_i, 2] = accuracy(scores, targets, 5)
+            index_i += 1
+
+            # Print status
+            if index_i % args.print_freq == 0:
+                print('Epoch: [{0}][{1}/{2}]\t'
+                      'Batch Time: {3:.3f}\t'
+                      'Loss: {4:.4f}\t'
+                      'Top-5 Accuracy: {5:.3f}'.format(epoch, index_i, args.num_epochs * len(train_dataloader),
+                                                       np.mean(hist[index_i - args.print_freq:index_i - 1, 0]) *
+                                                       args.print_freq,
+                                                       np.mean(hist[index_i - args.print_freq:index_i - 1, 1]),
+                                                       np.mean(hist[index_i - args.print_freq:index_i - 1, 2])))
+
+        # Per epoch's validation
+        if extractor is not None:
+            extractor.eval()
+        encoder.eval()
+        generator.eval()
+
+        val_start_time = time.time()
+        references = list()  # a list to store references (true captions)
+        hypotheses = list()  # a list to store hypothesis (prediction)
+
+        with torch.no_grad():
+            for id, (imgA, imgB, token_all, token_len, _, _, _) in enumerate(valid_dataloader):
+                # Move to GPU
+                imgA = imgA.cuda()
+                imgB = imgB.cuda()
+
+                if extractor is not None:
+                    feat_A, feat_B = extractor(imgA, imgB)
+                feat_A, feat_B = encoder(feat_A, feat_B)
+
+                # FIXME: 进一步修改设计
+                sequence = generator.sample(feat_A, feat_B, k=1)
+
+                img_token = token_all.tolist()
+                img_tokens = list(map(lambda c: [w for w in c if w not in {word_map['<START>'], word_map['<END>'],
+                                                                           word_map['<NULL>']}], img_token))
+                references.append(img_tokens)
+
+                pred_sequence = [w for w in sequence if w not in {word_map['<START>'], word_map['<END>'], word_map['<NULL>']}]
+                hypotheses.append(pred_sequence)
+                assert len(references) == len(hypotheses)
+
+
 
 
 
@@ -96,11 +206,21 @@ if __name__ == '__main__':
     parser.add_argument("d_model", type=int, default=512, help='dimension of model')
     parser.add_argument("n_heads", type=int, default=8, help='number of heads')
     parser.add_argument("vocab_file", type=str, default='word_map', help='vocab file')
+    parser.add_argument("data_path", type=str, default='./data/LEVIR_CC/images/', help='data files path')
     parser.add_argument("list_path", type=str, default='./data/', help='list path')
+    parser.add_argument("token_folder", type=str, default='./data/LEVIR_CC/tokens/', help='token files path')
+    parser.add_argument("vocab_file", type=str, default='vocab', help='path of vocab_file')
+    parser.add_argument("max_length", type=int, default=40, help='max length of each caption sentence')
+    parser.add_argument("allow_unknown", type=int, default=1, help='whether unknown tokens are allowed')
+    parser.add_argument("train_batch_size", type=int, default=32, help='batch size of training')
+    parser.add_argument("valid_batch_size", type=int, default=1, help='batch size of validation')
+    parser.add_argument("num_workers", type=int, default=4, help='to accelerate data load')
     parser.add_argument("cnn_lr", type=float, default=1e-4, help='cnn learning rate')
     parser.add_argument("encoder_lr", type=float, default=1e-4, help='encoder learning rate')
     parser.add_argument("decoder_lr", type=float, default=1e-4, help='decoder learning rate')
     parser.add_argument("num_epochs", type=int, default=40, help='number of epochs')
+    parser.add_argument("grad_clip", default=None, help='clip gradients')
+    parser.add_argument("print_freq", type=int, default=100, help='print frequency')
 
 
 
