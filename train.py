@@ -39,8 +39,8 @@ def main(args):
 
     """Initialize Network Details"""
     # CNN Extractor
-
-    extractor = CNNNet()
+    #FIXME
+    extractor = CNN_Net(args.CNN_Net)
     extractor.fine_tune(args.fint_tune_cnn)
 
     # Transformer Encoder
@@ -61,9 +61,9 @@ def main(args):
 
     # Parameters Info Print
     print("------------Checkpoint-SavePath------------{}".format(args.save_path))
-    print("------------extractor_CNN------------{}".format())
-    print("------------encoder_Transformer------------{}".format())
-    print("------------generator_Transformer------------{}".format())
+    print("------------extractor_CNN------------{}".format(args.CNN_Net))
+    # print("------------encoder_Transformer------------{}".format())
+    # print("------------generator_Transformer------------{}".format())
 
     # Loss Function
     criterion = nn.CrossEntropyLoss().cuda()
@@ -144,6 +144,7 @@ def main(args):
             # keep track metric
             hist[index_i, 0] = time.time() - start_time
             hist[index_i, 1] = loss.item()
+            #FIXME
             hist[index_i, 2] = accuracy(scores, targets, 5)
             index_i += 1
 
@@ -190,9 +191,53 @@ def main(args):
                 hypotheses.append(pred_sequence)
                 assert len(references) == len(hypotheses)
 
+                if id % args.print_freq == 0:
+                    pred_caption = ""
+                    ref_caption = ""
+                    for i in pred_sequence:
+                        pred_caption += (list(word_map.keys())[i]) + " "
+                    ref_caption = ""
+                    for i in img_tokens:
+                        for j in i:
+                            ref_caption += (list(word_map.keys())[j]) + " "
+                        ref_caption += ".    "
 
+            val_time = time.time() - val_start_time
+            # Calculate BLEU/Meteor/Rouge... scores
+            # FIXME
+            score_dict = get_eval_score(references, hypotheses)
+            Bleu_1 = score_dict['Bleu_1']
+            Bleu_2 = score_dict['Bleu_2']
+            Bleu_3 = score_dict['Bleu_3']
+            Bleu_4 = score_dict['Bleu_4']
+            Meteor = score_dict['Meteor']
+            Rouge_L = score_dict['Rouge_L']
+            Cider = score_dict['Cider']
+            print('Validation:\n' 'Time: {0:.3f}\t' 'BLEU-1: {1:.4f}\t' 'BLEU-2: {2:.4f}\t' 'BLEU-3: {3:.4f}\t'
+                  'BLEU-4: {4:.4f}\t' 'Meteor: {5:.4f}\t' 'Rouge: {6:.4f}\t' 'Cider: {7:.4f}\t'
+                  .format(val_time, Bleu_1, Bleu_2, Bleu_3, Bleu_4, Meteor, Rouge_L, Cider))
 
+        # Adjust Learning Rate
+        generator_lr_scheduler.step()
+        print("generator_lr: ", generator_optimizer.param_groups[0]['lr'])
+        encoder_lr_scheduler.step()
+        print("encoder_lr: ", encoder_optimizer.param_groups[0]['lr'])
+        if extractor_lr_scheduler is not None:
+            extractor_lr_scheduler.step()
+            print("extractor_lr: ", extractor_optimizer.param_groups[0]['lr'])
 
+        # Check whether to save best model
+        if Bleu_4 > best_bleu4:
+            best_bleu4 = max(Bleu_4, best_bleu4)
+            print("Save Model")
+            state = {
+                'extractor_dict':  extractor.state_dict(),
+                'encoder_dict': encoder.state_dict(),
+                'generator_dict': generator.state_dict(),
+            }
+            model_name = (str(args.data_name) + '_BatchSize' + str(args.batch_size) + str(args.CNN_Net) + 'Bleu-4' + 
+                          str(round(10000*best_bleu4)) + '.pth')
+            torch.save(state, os.path.join(args.save_path, model_name))
 
 
 if __name__ == '__main__':
@@ -206,6 +251,8 @@ if __name__ == '__main__':
     parser.add_argument("d_model", type=int, default=512, help='dimension of model')
     parser.add_argument("n_heads", type=int, default=8, help='number of heads')
     parser.add_argument("vocab_file", type=str, default='word_map', help='vocab file')
+    parser.add_argument("data_name", type=str, default='LEVIR_CC', help='data name')
+    parser.add_argument("CNN_Net", type=str, default='resnet101', help='extractor network')
     parser.add_argument("data_path", type=str, default='./data/LEVIR_CC/images/', help='data files path')
     parser.add_argument("list_path", type=str, default='./data/', help='list path')
     parser.add_argument("token_folder", type=str, default='./data/LEVIR_CC/tokens/', help='token files path')
