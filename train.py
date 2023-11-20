@@ -16,16 +16,17 @@ from torch.utils import data
 from utils.LEVIR_CC_Data import LEVIR_CC_Dataset
 
 from torch.nn.utils.rnn import pack_padded_sequence
-
+from utils.utils import get_eval_score, accuracy
+from models.CNN_Nets import Con_Net
+from models.model_decoder import Decoder_Generator
 
 def main(args):
-
     """Training and Validation"""
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id
 
     # save checkpoint
-    if os.path.exists(args.save_path) == False:
+    if not os.path.exists(args.save_path):
         os.mkdir(args.save_path)
 
     print(time.strftime("%m-%d  %H : %M : %S", time.localtime(time.time())))
@@ -39,15 +40,16 @@ def main(args):
 
     """Initialize Network Details"""
     # CNN Extractor
-    #FIXME
-    extractor = CNN_Net(args.CNN_Net)
+    extractor = Con_Net(args.CNN_Net)
     extractor.fine_tune(args.fint_tune_cnn)
-
+    # FIXME
     # Transformer Encoder
     encoder = TransformerEncoder(n_layers=args.n_layers, d_model=args.d_model, n_heads=args.n_heads)
 
     # Caption Generator
-    generator = TransformerGenerator(d_model=args.d_model, vocab_size=len(word_map))
+    generator = Decoder_Generator(encoder_dim=args.encoder_dim, feature_dim=args.feature_dim, vocab_size=len(word_map),
+                                  max_lengths=args.max_length, word_vocab=word_map, n_head=args.n_heads,
+                                  n_layers=args.decoder_n_layers, dropout=args.dropout)
 
     # Optimizers
     extractor_optimizer = torch.optim.Adam(extractor.parameters(), lr=args.cnn_lr)
@@ -62,6 +64,7 @@ def main(args):
     # Parameters Info Print
     print("------------Checkpoint-SavePath------------{}".format(args.save_path))
     print("------------extractor_CNN------------{}".format(args.CNN_Net))
+    #FIXME
     # print("------------encoder_Transformer------------{}".format())
     # print("------------generator_Transformer------------{}".format())
 
@@ -72,12 +75,14 @@ def main(args):
     if args.data_name == 'LEVIR-CC':
         train_dataloader = data.DataLoader(LEVIR_CC_Dataset(args.data_path, args.list_path, split='train',
                                                             token_folder=args.token_folder, vocab_file=args.vocab_file,
-                                                            max_length=args.max_length, allow_unknown=args.allow_unknown),
+                                                            max_length=args.max_length,
+                                                            allow_unknown=args.allow_unknown),
                                            batch_size=args.train_batch_size, shuffle=True, num_workers=args.num_workers,
                                            pin_memory=True)
         valid_dataloader = data.DataLoader(LEVIR_CC_Dataset(args.data_path, args.list_path, split='val',
                                                             token_folder=args.token_folder, vocab_file=args.vocab_file,
-                                                            max_length=args.max_length, allow_unknown=args.allow_unknown),
+                                                            max_length=args.max_length,
+                                                            allow_unknown=args.allow_unknown),
                                            batch_size=args.valid_batch_size, shuffle=True, num_workers=args.num_workers,
                                            pin_memory=True)
 
@@ -107,7 +112,6 @@ def main(args):
             generator_optimizer.zero_grad()
 
             # Move Data to GPU
-
             imgA = imgA.cuda()
             imgB = imgB.cuda()
 
@@ -118,7 +122,7 @@ def main(args):
             feat_A, feat_B = encoder(feat_A, feat_B)
             score, caps_sorted, decode_lengths, alphas, sort_ind = generator(feat_A, feat_B, token, token_len)
 
-            targets =  caps_sorted[:, 1:]
+            targets = caps_sorted[:, 1:]
             scores = pack_padded_sequence(score, decode_lengths, batch_first=True).data
             targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
 
@@ -144,7 +148,6 @@ def main(args):
             # keep track metric
             hist[index_i, 0] = time.time() - start_time
             hist[index_i, 1] = loss.item()
-            #FIXME
             hist[index_i, 2] = accuracy(scores, targets, 5)
             index_i += 1
 
@@ -187,7 +190,8 @@ def main(args):
                                                                            word_map['<NULL>']}], img_token))
                 references.append(img_tokens)
 
-                pred_sequence = [w for w in sequence if w not in {word_map['<START>'], word_map['<END>'], word_map['<NULL>']}]
+                pred_sequence = [w for w in sequence if
+                                 w not in {word_map['<START>'], word_map['<END>'], word_map['<NULL>']}]
                 hypotheses.append(pred_sequence)
                 assert len(references) == len(hypotheses)
 
@@ -204,7 +208,6 @@ def main(args):
 
             val_time = time.time() - val_start_time
             # Calculate BLEU/Meteor/Rouge... scores
-            # FIXME
             score_dict = get_eval_score(references, hypotheses)
             Bleu_1 = score_dict['Bleu_1']
             Bleu_2 = score_dict['Bleu_2']
@@ -231,12 +234,12 @@ def main(args):
             best_bleu4 = max(Bleu_4, best_bleu4)
             print("Save Model")
             state = {
-                'extractor_dict':  extractor.state_dict(),
+                'extractor_dict': extractor.state_dict(),
                 'encoder_dict': encoder.state_dict(),
                 'generator_dict': generator.state_dict(),
             }
-            model_name = (str(args.data_name) + '_BatchSize' + str(args.batch_size) + str(args.CNN_Net) + 'Bleu-4' + 
-                          str(round(10000*best_bleu4)) + '.pth')
+            model_name = (str(args.data_name) + '_BatchSize' + str(args.batch_size) + str(args.CNN_Net) + 'Bleu-4' +
+                          str(round(10000 * best_bleu4)) + '.pth')
             torch.save(state, os.path.join(args.save_path, model_name))
 
 
@@ -244,32 +247,33 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A lite model for remote sensing change2captioning')
 
     # LEVIR-CC paramters
-    parser.add_argument("gpu_id", type=int, default=0, help='gpu id of the devices')
-    parser.add_argument("save_path", type=str, default='./checkpoints', help='path to save checkpoints')
-    parser.add_argument("fine_tune", type=bool, default=True, help='fine tune cnn')
-    parser.add_argument("n_layer", type=int, default=6, help='number of layers')
-    parser.add_argument("d_model", type=int, default=512, help='dimension of model')
-    parser.add_argument("n_heads", type=int, default=8, help='number of heads')
-    parser.add_argument("vocab_file", type=str, default='word_map', help='vocab file')
-    parser.add_argument("data_name", type=str, default='LEVIR_CC', help='data name')
-    parser.add_argument("CNN_Net", type=str, default='resnet101', help='extractor network')
-    parser.add_argument("data_path", type=str, default='./data/LEVIR_CC/images/', help='data files path')
-    parser.add_argument("list_path", type=str, default='./data/', help='list path')
-    parser.add_argument("token_folder", type=str, default='./data/LEVIR_CC/tokens/', help='token files path')
-    parser.add_argument("vocab_file", type=str, default='vocab', help='path of vocab_file')
-    parser.add_argument("max_length", type=int, default=40, help='max length of each caption sentence')
-    parser.add_argument("allow_unknown", type=int, default=1, help='whether unknown tokens are allowed')
-    parser.add_argument("train_batch_size", type=int, default=32, help='batch size of training')
-    parser.add_argument("valid_batch_size", type=int, default=1, help='batch size of validation')
-    parser.add_argument("num_workers", type=int, default=4, help='to accelerate data load')
-    parser.add_argument("cnn_lr", type=float, default=1e-4, help='cnn learning rate')
-    parser.add_argument("encoder_lr", type=float, default=1e-4, help='encoder learning rate')
-    parser.add_argument("decoder_lr", type=float, default=1e-4, help='decoder learning rate')
-    parser.add_argument("num_epochs", type=int, default=40, help='number of epochs')
-    parser.add_argument("grad_clip", default=None, help='clip gradients')
-    parser.add_argument("print_freq", type=int, default=100, help='print frequency')
-
-
-
+    parser.add_argument("--gpu_id", type=int, default=0, help='gpu id of the devices')
+    parser.add_argument("--save_path", type=str, default='./checkpoints', help='path to save checkpoints')
+    parser.add_argument("--fine_tune", type=bool, default=True, help='fine tune cnn')
+    parser.add_argument("--n_layer", type=int, default=6, help='number of layers')
+    parser.add_argument("--d_model", type=int, default=512, help='dimension of model')
+    parser.add_argument("--n_heads", type=int, default=8, help='number of heads')
+    parser.add_argument("--vocab_file", type=str, default='word_map', help='vocab file')
+    parser.add_argument("--data_name", type=str, default='LEVIR_CC', help='data name')
+    parser.add_argument("--CNN_Net", type=str, default='resnet101', help='extractor network')
+    parser.add_argument("--encoder_dim", type=int, default=2048, help='the dim of extracted features by diff nets')
+    parser.add_argument("--feature_dim", type=int, default=2048)
+    parser.add_argument("--data_path", type=str, default='./data/LEVIR_CC/images/', help='data files path')
+    parser.add_argument("--list_path", type=str, default='./data/', help='list path')
+    parser.add_argument("--token_folder", type=str, default='./data/LEVIR_CC/tokens/', help='token files path')
+    parser.add_argument("--vocab_file", type=str, default='vocab', help='path of vocab_file')
+    parser.add_argument("--max_length", type=int, default=40, help='max length of each caption sentence')
+    parser.add_argument("--allow_unknown", type=int, default=1, help='whether unknown tokens are allowed')
+    parser.add_argument("--train_batch_size", type=int, default=32, help='batch size of training')
+    parser.add_argument("--valid_batch_size", type=int, default=1, help='batch size of validation')
+    parser.add_argument("--num_workers", type=int, default=4, help='to accelerate data load')
+    parser.add_argument("--cnn_lr", type=float, default=1e-4, help='cnn learning rate')
+    parser.add_argument("--encoder_lr", type=float, default=1e-4, help='encoder learning rate')
+    parser.add_argument("--decoder_lr", type=float, default=1e-4, help='decoder learning rate')
+    parser.add_argument("--num_epochs", type=int, default=40, help='number of epochs')
+    parser.add_argument("--grad_clip", default=None, help='clip gradients')
+    parser.add_argument("--print_freq", type=int, default=100, help='print frequency')
+    parser.add_argument("--dropout", type=float, default=0.1,help='dropout')
+    parser.add_argument("--decoder_n_layers", type=int, default=1)
     args = parser.parse_args()
     main(args)

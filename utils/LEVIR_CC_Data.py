@@ -13,11 +13,12 @@ import os
 
 from utils.preprocess_data import token_encode_process
 
+
 class LEVIR_CC_Dataset(Dataset):
     def __init__(self, data_path, list_path, split, max_length=40, vocab_file=None, allow_unknown=0, max_iters=None,
                  token_folder=None):
 
-        self.mean = [100.6790,  99.5023,  84.9932]
+        self.mean = [100.6790, 99.5023, 84.9932]
         self.std = [50.9820, 48.4838, 44.7057]
         self.data_path = data_path
         self.list_path = list_path
@@ -25,7 +26,8 @@ class LEVIR_CC_Dataset(Dataset):
         self.max_length = max_length
 
         assert self.split in ['train', 'val', 'test']
-        self.img_details = [img_detail.strip() for img_detail in open(os.path.join(self.list_path, self.split+'.txt'))]
+        self.img_details = [img_detail.strip() for img_detail in
+                            open(os.path.join(self.list_path, self.split + '.txt'))]
         if vocab_file is not None:
             with open(os.path.join(list_path + vocab_file + '.json'), 'r') as f:
                 self.word_vocab = json.load(f)
@@ -33,7 +35,8 @@ class LEVIR_CC_Dataset(Dataset):
 
         if max_iters is not None:
             n_repeat = (max_iters // len(self.img_details)) + 1
-            self.img_details = self.img_details * n_repeat + self.img_details[:max_iters-n_repeat*len(self.img_details)]
+            self.img_details = self.img_details * n_repeat + self.img_details[
+                                                             :max_iters - n_repeat * len(self.img_details)]
         self.files = []
         if split == 'train':
             for img_detail in self.img_details:
@@ -114,7 +117,7 @@ class LEVIR_CC_Dataset(Dataset):
             token_all = np.zeros((len(caption_list), self.max_length), dtype=int)
             token_all_len = np.zeros((len(caption_list), 1), dtype=int)
             for i, tokens in enumerate(caption_list):
-                token_encode = token_encode_process(tokens, self.word_vocab, allow_unknown=self.allow_unknown==1)
+                token_encode = token_encode_process(tokens, self.word_vocab, allow_unknown=self.allow_unknown == 1)
                 token_all[i, :len(token_encode)] = token_encode
                 token_all_len[i] = len(token_encode)
 
@@ -123,7 +126,7 @@ class LEVIR_CC_Dataset(Dataset):
                 token = token_all[id]
                 token_len = token_all_len[id].item()
             else:
-                i = np.random.randint(len(caption_list)-1)
+                i = np.random.randint(len(caption_list) - 1)
                 token = token_all[i]
                 token_len = token_all_len[i].item()
         else:
@@ -132,16 +135,14 @@ class LEVIR_CC_Dataset(Dataset):
             token = np.zeros(1, dtype=int)
             token_len = np.zeros(1, dtype=int)
 
-        return (img_A.copy(),  img_B.copy(), token_all.copy(),  token_all_len.copy(), token.copy(), np.array(token_len),
+        return (img_A.copy(), img_B.copy(), token_all.copy(), token_all_len.copy(), token.copy(), np.array(token_len),
                 img_detail)
 
     def __len__(self):
         return len(self.files)
 
+
 if __name__ == '__main___':
     train_dataset = LEVIR_CC_Dataset(data_path='./data/LEVIR_CC', list_path='./data/', split='train', token_folder=None)
     train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True, pin_memory=True)
     print("ok")
-
-
-
