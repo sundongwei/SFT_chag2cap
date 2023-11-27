@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 
 import os
 
-from utils.preprocess_data import token_encode_process
+from preprocess_data import token_encode_process
 
 
 class LEVIR_CC_Dataset(Dataset):

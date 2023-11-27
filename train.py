@@ -19,6 +19,8 @@ from torch.nn.utils.rnn import pack_padded_sequence
 from utils.utils import get_eval_score, accuracy
 from models.CNN_Nets import Con_Net
 from models.model_decoder import Decoder_Generator
+from models.axial_attention import axial_attention, AxialImageTransformer
+
 
 def main(args):
     """Training and Validation"""
@@ -44,7 +46,9 @@ def main(args):
     extractor.fine_tune(args.fint_tune_cnn)
     # FIXME
     # Transformer Encoder
-    encoder = TransformerEncoder(n_layers=args.n_layers, d_model=args.d_model, n_heads=args.n_heads)
+    # encoder = TransformerEncoder(n_layers=args.n_layers, d_model=args.d_model, n_heads=args.n_heads)
+    encoder = AxialImageTransformer(dim=args.d_model, depth=12, heads=args.n_heads, reversible=True,
+                                    axial_pos_emb_shape=None)
 
     # Caption Generator
     generator = Decoder_Generator(encoder_dim=args.encoder_dim, feature_dim=args.feature_dim, vocab_size=len(word_map),

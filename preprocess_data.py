@@ -84,7 +84,7 @@ def main(args):
     print('max_length of the dataset : ', max_length)
     if input_vocab_json == '':
         print('--------Building Vocab--------')
-        word_freq = build_vocab(all_cap_tokens, word_count_threshold)
+        word_freq = build_vocab(all_cap_tokens, args.word_count_threshold)
     else:
         print('--------Loading Vocab--------')
         with open(input_vocab_json, 'r') as f:
@@ -99,7 +99,7 @@ def build_vocab(sequences, min_token_count=1):
     token_to_count = {}
 
     for seq in sequences:
-        for tokens in seq:
+        for tokens in seq[1]:
             for token in tokens:
                 if token not in token_to_count:
                     token_to_count[token] = 0
@@ -158,7 +158,8 @@ def token_encode_process(seq_tokens, token2idx, allow_unknown=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    args = parser.parse_args()
     parser.add_argument("--dataset", type=str, default='LEVIR_CC', help="dataset name")
     parser.add_argument("--word_count_threshold", type=int, default=5, help="word count threshold")
+
+    args = parser.parse_args()
     main(args)
