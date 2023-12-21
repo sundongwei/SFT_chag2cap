@@ -6,10 +6,27 @@
 import os
 import torch
 
-from eval_funtion.bleu.bleu import Bleu
-from eval_funtion.meteor.meteor import Meteor
-from eval_funtion.rouge.rouge import Rouge
-from eval_funtion.cider.cider import Cider
+from eval_func.bleu.bleu import Bleu
+from eval_func.meteor.meteor import Meteor
+from eval_func.rouge.rouge import Rouge
+from eval_func.cider.cider import Cider
+
+
+def accuracy(scores, targets, k):
+    """
+    Computes top-k accuracy, from predicted and true labels.
+
+    :param scores: scores from the model
+    :param targets: true labels
+    :param k: k in top-k accuracy
+    :return: top-k accuracy
+    """
+
+    batch_size = targets.size(0)
+    _, ind = scores.topk(k, 1, True, True)
+    correct = ind.eq(targets.view(-1, 1).expand_as(ind))
+    correct_total = correct.view(-1).float().sum()  # 0D tensor
+    return correct_total.item() * (100.0 / batch_size)
 
 
 def get_eval_score(references, hypotheses):
@@ -20,23 +37,17 @@ def get_eval_score(references, hypotheses):
         (Cider(), "CIDEr")
     ]
 
-    hyp = [[' '.join(hyp)] for hyp in [[str(x) for x in hyp] for hyp in hypotheses]]
+    hypo = [[' '.join(hypo)] for hypo in [[str(x) for x in hypo] for hypo in hypotheses]]
     ref = [[' '.join(reft) for reft in reftmp] for reftmp in
            [[[str(x) for x in reft] for reft in reftmp] for reftmp in references]]
+
     score = []
     method = []
-    for scorer, method in scorers:
-        score_i, method_i = scorer.compute_score(ref, hyp)
+    for scorer, method_i in scorers:
+        score_i, scores_i = scorer.compute_score(ref, hypo)
         score.extend(score_i) if isinstance(score_i, list) else score.append(score_i)
         method.extend(method_i) if isinstance(method_i, list) else method.append(method_i)
+        print("{} {}".format(method_i, score_i))
     score_dict = dict(zip(method, score))
 
     return score_dict
-
-
-def accuracy(scores, targets, k):
-    batch_size = targets.size(0)
-    _, ind = scores.topk(k, 1, True, True)
-    correct = ind.eq(targets.view(-1, 1).expand_as(ind))
-    correct_total = correct.view(-1).float().sum()  # 0D tensor
-    return correct_total.item() * (100.0 / batch_size)

@@ -122,14 +122,25 @@ class _ReversibleFunction(Function):
             y, dy = block.backward_pass(y, dy, **kwargs)
         return dy, None, None
 
+
 class ReversibleSequence(nn.Module):
     def __init__(self, blocks, ):
         super().__init__()
         self.blocks = nn.ModuleList([ReversibleBlock(f, g) for (f, g) in blocks])
 
-    def forward(self, x, arg_route = (True, True), **kwargs):
+    # def forward(self, x, arg_route = (True, True), **kwargs):
+    #     f_args, g_args = map(lambda route: kwargs if route else {}, arg_route)
+    #     block_kwargs = {'f_args': f_args, 'g_args': g_args}
+    #     x = torch.cat((x, x), dim = 1)
+    #     x = _ReversibleFunction.apply(x, self.blocks, block_kwargs)
+    #     return torch.stack(x.chunk(2, dim = 1)).mean(dim = 0)
+
+    def forward(self, x1, x2, arg_route=(True, True), **kwargs):
         f_args, g_args = map(lambda route: kwargs if route else {}, arg_route)
         block_kwargs = {'f_args': f_args, 'g_args': g_args}
-        x = torch.cat((x, x), dim = 1)
-        x = _ReversibleFunction.apply(x, self.blocks, block_kwargs)
-        return torch.stack(x.chunk(2, dim = 1)).mean(dim = 0)
+        x1 = torch.cat((x1, x1), dim=1)
+        x2 = torch.cat((x2, x2), dim=1)
+        x1 = _ReversibleFunction.apply(x1, self.blocks, block_kwargs)
+        x2 = _ReversibleFunction.apply(x2, self.blocks, block_kwargs)
+        return torch.stack(x1.chunk(2, dim=1)).mean(dim=0), torch.stack(x2.chunk(2, dim=1)).mean(dim=0)
+

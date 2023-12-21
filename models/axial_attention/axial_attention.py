@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from operator import itemgetter
-from axial_attention.reversible import ReversibleSequence
+from models.axial_attention.reversible import ReversibleSequence
 
 # helper functions
 
@@ -203,6 +203,12 @@ class AxialImageTransformer(nn.Module):
         execute_type = ReversibleSequence if reversible else Sequential
         self.layers = execute_type(layers)
 
-    def forward(self, x):
-        x = self.pos_emb(x)
-        return self.layers(x)
+    # def forward(self, x):
+    #     x = self.pos_emb(x)
+    #     return self.layers(x)
+    def forward(self, imgA, imgB):
+        imgA = self.pos_emb(imgA)
+        imgB = self.pos_emb(imgB)
+        return self.layers(imgA, imgB)
+
+

@@ -114,7 +114,7 @@ class StackTransformer(nn.Module):
     def __init__(self, decoder_layer, num_layers, norm=None):
         super().__init__()
         #TODO
-        self.layers = torch.nn.modules.Transformer._get_clones(decoder_layer, num_layers)
+        self.layers = torch.nn.modules.transformer._get_clones(decoder_layer, num_layers)
         self.num_layers = num_layers
         self.norm = norm
 
@@ -219,7 +219,47 @@ class Decoder_Generator(nn.Module):
 
         return pred, encoded_captions, decode_lengths, sort_ind
 
+    def sample(self, x1, x2, k=1):
+        """
+        :param x1, x2: encoded images, a tensor of dimension (batch_size, channel, enc_image_size, enc_image_size)
+        """
+        x_sam = self.cos(x1, x2)
+        x = torch.cat([x1, x2], dim=1) + x_sam.unsqueeze(1)  # (batch_size, 2channel, enc_image_size, enc_image_size)
+        x = self.LN(self.conv1(x))
+        batch, channel = x.size(0), x.size(1)
+        x = x.view(batch, channel, -1).permute(2, 0, 1)  # (hw, batch_size, feature_dim)
 
+        tgt = torch.zeros(batch, self.max_length).to(torch.int64).cuda()
+
+        mask = torch.triu(torch.ones(self.max_length, self.max_length) * float('-inf'), diagonal=1)
+        mask = mask.cuda()
+        tgt[:, 0] = torch.LongTensor([self.word_vocab['<START>']] * batch).cuda()  # (batch_size*k, 1)
+        seqs = torch.LongTensor([[self.word_vocab['<START>']]] * batch).cuda()
+        # Weight = torch.zeros(1, self.max_length, x.size(0)).cuda()
+        for step in range(self.max_length):
+            tgt_pad_mask = (tgt == self.word_vocab['<NULL>'])
+            word_emb = self.vocab_embedding(tgt)
+            word_emb = word_emb.transpose(1, 0)  # (length, batch, feature_dim)
+
+            word_emb = self.position_encoding(word_emb)
+            pred = self.transformer(word_emb, x, tgt_mask=mask, tgt_key_padding_mask=tgt_pad_mask)
+
+            pred = self.fc(self.dropout(pred))  # (length, batch, vocab_size)
+            scores = pred.permute(1, 0, 2)  # (batch, length, vocab_size)
+            scores = scores[:, step, :].squeeze(1)  # [batch, 1, vocab_size] -> [batch, vocab_size]
+            predicted_id = torch.argmax(scores, axis=-1)
+            seqs = torch.cat([seqs, predicted_id.unsqueeze(1)], dim=-1)
+            # Weight = torch.cat([Weight, weight], dim = 0)
+            if predicted_id == self.word_vocab['<END>']:
+                break
+            if step < (self.max_length - 1):  # except <END> node
+                tgt[:, step + 1] = predicted_id
+        seqs = seqs.squeeze(0)
+        seqs = seqs.tolist()
+
+        # feature=x.clone()
+        # Weight1=Weight.clone()
+        return seqs
 
 
 

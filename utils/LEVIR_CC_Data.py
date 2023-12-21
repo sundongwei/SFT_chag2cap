@@ -27,7 +27,7 @@ class LEVIR_CC_Dataset(Dataset):
 
         assert self.split in ['train', 'val', 'test']
         self.img_details = [img_detail.strip() for img_detail in
-                            open(os.path.join(self.list_path, self.split + '.txt'))]
+                            open(os.path.join(self.list_path, self.split + '_captions' + '.txt'))]
         if vocab_file is not None:
             with open(os.path.join(list_path + vocab_file + '.json'), 'r') as f:
                 self.word_vocab = json.load(f)
@@ -40,8 +40,8 @@ class LEVIR_CC_Dataset(Dataset):
         self.files = []
         if split == 'train':
             for img_detail in self.img_details:
-                img_A = os.path.join(self.data_path + '/' + split + 'A' + img_detail.split('-')[0])
-                img_B = os.path.join(self.data_path + '/' + split + 'B' + img_detail.split('-')[0])
+                img_A = os.path.join(self.data_path + '/' + split + '/A/' + img_detail.split('-')[0])
+                img_B = os.path.join(self.data_path + '/' + split + '/B/' + img_detail.split('-')[0])
                 token_id = img_detail.split('-')[-1]
                 if token_folder is not None:
                     token_file = os.path.join(token_folder + img_detail.split('.')[0] + '.txt')
@@ -57,8 +57,8 @@ class LEVIR_CC_Dataset(Dataset):
 
         elif split == 'val':
             for img_detail in self.img_details:
-                img_A = os.path.join(self.data_path + '/' + split + 'A' + img_detail)
-                img_B = os.path.join(self.data_path + '/' + split + 'B' + img_detail)
+                img_A = os.path.join(self.data_path + '/' + split + '/A/' + img_detail)
+                img_B = os.path.join(self.data_path + '/' + split + '/B/' + img_detail)
                 # token_id = img_detail.split('-')[-1]
                 token_id = None
                 if token_folder is not None:
@@ -75,8 +75,8 @@ class LEVIR_CC_Dataset(Dataset):
 
         elif split == 'test':
             for img_detail in self.img_details:
-                img_A = os.path.join(self.data_path + '/' + split + 'A' + img_detail)
-                img_B = os.path.join(self.data_path + '/' + split + 'B' + img_detail)
+                img_A = os.path.join(self.data_path + '/' + split + '/A/' + img_detail)
+                img_B = os.path.join(self.data_path + '/' + split + '/B/' + img_detail)
                 # token_id = img_detail.split('-')[-1]
                 token_id = None
                 if token_folder is not None:
