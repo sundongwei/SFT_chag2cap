@@ -71,9 +71,8 @@ def main(args):
     # Parameters Info Print
     print("------------Checkpoint-SavePath------------{}".format(args.save_path))
     print("------------extractor_CNN------------{}".format(args.cnn_net))
-    #FIXME
-    # print("------------encoder_Transformer------------{}".format())
-    # print("------------generator_Transformer------------{}".format())
+    print("------------encoder_Transformer------------{}".format('encoder'))
+    print("------------generator_Transformer------------{}".format('generator'))
 
     # Loss Function
     criterion = nn.CrossEntropyLoss().cuda()
@@ -86,13 +85,15 @@ def main(args):
                                                             allow_unknown=args.allow_unknown),
                                            batch_size=args.train_batch_size, shuffle=True, num_workers=args.num_workers,
                                            pin_memory=True)
-        print("----------train_dataloader length-------------)", len(train_dataloader))
+        print("----------train_dataloader length-------------{}".format(len(train_dataloader)))
         valid_dataloader = data.DataLoader(LEVIR_CC_Dataset(args.data_path, args.list_path, split='val',
                                                             token_folder=args.token_folder, vocab_file=args.vocab_file,
                                                             max_length=args.max_length,
                                                             allow_unknown=args.allow_unknown),
                                            batch_size=args.valid_batch_size, shuffle=True, num_workers=args.num_workers,
                                            pin_memory=True)
+
+        print("----------val_dataloader length-------------{}".format(len(valid_dataloader)))
 
     elif args.data_name == 'Dubai_CC':
         train_dataloader = Dubai_CC_DataLoader(args.list_path, word_map, args.batch_size, args.num_workers)
@@ -243,12 +244,20 @@ def main(args):
         if Bleu_4 > best_bleu4:
             best_bleu4 = max(Bleu_4, best_bleu4)
             print("Save Model")
+            # state = {
+            #     'extractor_dict': extractor.state_dict(),
+            #     'encoder_dict': encoder.state_dict(),
+            #     'generator_dict': generator.state_dict(),
+            # }
             state = {
-                'extractor_dict': extractor.state_dict(),
-                'encoder_dict': encoder.state_dict(),
-                'generator_dict': generator.state_dict(),
+                'epoch': epoch,
+                'extractor': extractor,
+                'encoder': encoder,
+                'generator': generator,
             }
-            model_name = (str(args.data_name) + '_BatchSize' + str(args.train_batch_size) + str(args.cnn_net) + 'Bleu-4' +
+
+            model_name = (str(args.data_name) + '_BatchSize' + '_' + str(args.train_batch_size) + '_' +
+                          str(args.cnn_net) + '_' + 'Bleu-4' + '_' +
                           str(round(10000 * best_bleu4)) + '.pth')
             torch.save(state, os.path.join(args.save_path, model_name))
 
@@ -276,14 +285,14 @@ if __name__ == '__main__':
     parser.add_argument("--allow_unknown", type=int, default=1, help='whether unknown tokens are allowed')
     parser.add_argument("--train_batch_size", type=int, default=32, help='batch size of training')
     parser.add_argument("--valid_batch_size", type=int, default=1, help='batch size of validation')
-    parser.add_argument("--num_workers", type=int, default=0, help='to accelerate data load')
+    parser.add_argument("--num_workers", type=int, default=8, help='to accelerate data load')
     parser.add_argument("--cnn_lr", type=float, default=1e-4, help='cnn learning rate')
     parser.add_argument("--encoder_lr", type=float, default=1e-4, help='encoder learning rate')
     parser.add_argument("--decoder_lr", type=float, default=1e-4, help='decoder learning rate')
-    parser.add_argument("--num_epochs", type=int, default=40, help='number of epochs')
+    parser.add_argument("--num_epochs", type=int, default=50, help='number of epochs')
     parser.add_argument("--grad_clip", default=None, help='clip gradients')
     parser.add_argument("--print_freq", type=int, default=100, help='print frequency')
-    parser.add_argument("--dropout", type=float, default=0.1,help='dropout')
+    parser.add_argument("--dropout", type=float, default=0.1, help='dropout')
     parser.add_argument("--decoder_n_layers", type=int, default=1)
     args = parser.parse_args()
     main(args)

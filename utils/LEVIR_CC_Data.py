@@ -27,7 +27,7 @@ class LEVIR_CC_Dataset(Dataset):
 
         assert self.split in ['train', 'val', 'test']
         self.img_details = [img_detail.strip() for img_detail in
-                            open(os.path.join(self.list_path, self.split + '_captions' + '.txt'))]
+                            open(os.path.join(self.list_path, self.split + '.txt'))]
         if vocab_file is not None:
             with open(os.path.join(list_path + vocab_file + '.json'), 'r') as f:
                 self.word_vocab = json.load(f)
@@ -142,7 +142,8 @@ class LEVIR_CC_Dataset(Dataset):
         return len(self.files)
 
 
-if __name__ == '__main___':
-    train_dataset = LEVIR_CC_Dataset(data_path='./data/LEVIR_CC', list_path='./data/', split='train', token_folder=None)
+if __name__ == '__main__':
+    train_dataset = LEVIR_CC_Dataset(data_path='./data/LEVIR_CC/images', list_path='/home/sdw/paper_projects/Lite_Chag2cap/data/LEVIR_CC',
+                                     split='train', token_folder=None)
     train_loader = DataLoader(dataset=train_dataset, batch_size=1, shuffle=True, pin_memory=True)
     print("ok")

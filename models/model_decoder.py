@@ -141,7 +141,8 @@ class PositionalEncoder(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
-        self.register_buffer('pe', pe)
+
+        self.embedding_1D = nn.Embedding(52, int(d_model))
 
     def forward(self, x):
         x = x + self.pe[:x.size(0), :]
@@ -185,13 +186,13 @@ class Decoder_Generator(nn.Module):
     def forward(self, x1, x2, encoded_captions, caption_lengths):
         """
         :param x1: encoded image feature, tensor of dimension (batch_size, enc_image_size, enc_image_size, encoder_dim)
-        :param xi2: encoded image feature, tensor of dimension (batch_size, enc_image_size, enc_image_size, encoder_dim)
+        :param x2: encoded image feature, tensor of dimension (batch_size, enc_image_size, enc_image_size, encoder_dim)
         :param encoded_captions: encoded captions, tensor of dimension (batch_size, max_caption_length)
         :param caption_lengths: caption lengths, tensor of dimension (batch_size, 1)
         :return: scores for vocabulary, sorted encoded captions, decode lengths, weights, sort indices
         """
-
         x_sam = self.cos(x1, x2)
+
         x = torch.cat([x1, x2], dim=1) + x_sam.unsqueeze(1)
         x = self.LN(self.conv1(x))
 
@@ -202,7 +203,7 @@ class Decoder_Generator(nn.Module):
         # Create masks
         mask = torch.triu(torch.ones(word_length, word_length) * float('-inf'), diagonal=1)
         mask = mask.cuda()
-        tgt_pad_mask = (encoded_captions == self.word_vocab['<NULL>']) |  (encoded_captions == self.word_vocab['<END>'])
+        tgt_pad_mask = (encoded_captions == self.word_vocab['<NULL>']) | (encoded_captions == self.word_vocab['<END>'])
         word_embed = self.vocab_embedding(encoded_captions)
         word_embed = word_embed.transpose(1, 0)
 
@@ -262,4 +263,63 @@ class Decoder_Generator(nn.Module):
         return seqs
 
 
+    def sample1(self, x1, x2, k=1):
+        """
+        :param x1, x2: encoded images, a tensor of dimension (batch_size, channel, enc_image_size, enc_image_size)
+        :param max_lengths: maximum length of the generated captions
+        :param k: beam_size
+        """
+
+        x = torch.cat([x1, x2], dim = 1)
+        x = self.LN(self.conv1(x))
+        batch, channel, h, w = x.shape
+        x = x.view(batch, channel, -1).unsqueeze(0).expand(k, -1, -1, -1).reshape(batch*k, channel, h*w).permute(2, 0, 1) #(h*w, batch, feature_dim)
+
+        tgt = torch.zeros(k*batch, self.max_length).to(torch.int64).cuda()
+
+        mask = (torch.triu(torch.ones(self.max_length, self.max_length)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        mask = mask.cuda()
+        tgt[:, 0] = torch.LongTensor([self.word_vocab['<START>']] *batch*k).cuda() #(batch_size*k, 1)
+        seqs = torch.LongTensor([[self.word_vocab['<START>']]] *batch*k).cuda()
+        top_k_scores = torch.zeros(k*batch, 1).cuda()
+        complete_seqs = []
+        complete_seqs_scores = []
+        for step in range(self.max_length):
+            word_emb = self.vocab_embedding(tgt)
+            word_emb = word_emb.transpose(1, 0)
+            word_emb = self.position_encoding(word_emb)
+            pred = self.transformer(word_emb, x, tgt_mask=mask)
+            pred = self.fc(self.dropout(pred))  # (length, batch, vocab_size)
+            scores = pred.permute(1, 0, 2) # (batch, length, vocab_size)
+            scores = scores[:, step, :].squeeze(1)  # [batch, 1, vocab_size] -> [batch, vocab_size]
+            scores = F.log_softmax(scores, dim=1)
+            scores = top_k_scores.expand_as(scores) + scores
+            top_k_scores, top_k_words = scores.view(-1).topk(k, 0, True, True)  # (s)
+            prev_word_inds = torch.div(top_k_words, self.vocab_size, rounding_mode='floor')
+            next_word_inds = top_k_words % self.vocab_size  # (s)
+            seqs = torch.cat([seqs[prev_word_inds], next_word_inds.unsqueeze(1)], dim = 1)
+            incomplete_inds = [ind for ind, next_word in enumerate(next_word_inds) if
+                               next_word != self.word_vocab['<END>']]
+            complete_inds = list(set(range(len(next_word_inds))) - set(incomplete_inds))
+            if len(complete_inds) > 0:
+                complete_seqs.extend(seqs[complete_inds].tolist())
+                complete_seqs_scores.extend(top_k_scores[complete_inds])
+            k -= len(complete_inds)  # reduce beam length accordingly
+            if k == 0:
+                break
+            seqs = seqs[incomplete_inds]
+            x = x[:,prev_word_inds[incomplete_inds]]
+            top_k_scores = top_k_scores[incomplete_inds].unsqueeze(1)
+            tgt = tgt[incomplete_inds]
+            if step<self.max_length-1:
+                tgt[:, :step+2] = seqs
+
+
+        if complete_seqs == []:
+            complete_seqs.extend(seqs[incomplete_inds].tolist())
+            complete_seqs_scores.extend(top_k_scores[incomplete_inds])
+        i = complete_seqs_scores.index(max(complete_seqs_scores))
+        seq = complete_seqs[i]
+        return seq
 
