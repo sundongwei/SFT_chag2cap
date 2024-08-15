@@ -1,0 +1,1 @@
+[["<START>", "A", "road", "was", "built", "<END>"], ["<START>", "A", "street", "appeared", "in", "the", "desert", "<END>"], ["<START>", "A", "road", "has", "been", "realized", "in", "the", "desert", "<END>"], ["<START>", "A", "new", "road", "appears", "in", "the", "desert", "<END>"], ["<START>", "A", "new", "street", "was", "built", "in", "the", "desert", "<END>"]]

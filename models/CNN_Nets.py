@@ -24,8 +24,14 @@ class Con_Net(nn.Module):
         elif self.network == 'resnet101':
             cnn = models.resnet101(weights='ResNet101_Weights.DEFAULT')
             modules = list(cnn.children())[:-2]
+            
         elif self.network == 'resnet152':
             cnn = models.resnet152(weights='ResNet152_Weights.IMAGENET1K_V1')
+            modules = list(cnn.children())[:-2]
+        elif self.network == 'vgg':
+            cnn = models.vgg16_bn(weights='VGG16_BN_Weights.DEFAULT')
+            cnn.features[40] = nn.Conv2d(in_channels=512, out_channels=2048, kernel_size=3, padding=1)
+            cnn.features[41] = nn.BatchNorm2d(2048)
             modules = list(cnn.children())[:-2]
 
         self.cnn = nn.Sequential(*modules)

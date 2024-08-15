@@ -14,13 +14,14 @@ import torch.nn as nn
 from torch.utils import data
 
 from utils.LEVIR_CC_Data import LEVIR_CC_Dataset
-
+from utils.DubaiCC import DubaiCCDataset
 from torch.nn.utils.rnn import pack_padded_sequence
 from utils.utils import get_eval_score, accuracy
 from models.CNN_Nets import Con_Net
-from models.model_decoder import Decoder_Generator
-# from models.axial_attention.axial_attention import AxialImageTransformer
-from models.cc_net import CC_Trans
+from models.model_decoder import LightDecoderGenerator
+from models.AdjustLength_net import Adjust_Trans
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def main(args):
@@ -35,7 +36,7 @@ def main(args):
     print(time.strftime("%m-%d  %H : %M : %S", time.localtime(time.time())))
 
     start_epoch = 0
-    best_bleu4 = 0.
+    best_bleu4 = 0.4
 
     # Read Word Map
     with open(os.path.join(args.list_path + args.vocab_file + '.json'), 'r') as f:
@@ -46,15 +47,11 @@ def main(args):
     extractor = Con_Net(args.cnn_net)
     extractor.fine_tuning(args.fine_tune)
 
-    # FIXME
     # Transformer Encoder
-    # encoder = TransformerEncoder(n_layers=args.n_layers, d_model=args.d_model, n_heads=args.n_heads)
-    # encoder = AxialImageTransformer(dim=args.d_model, depth=12, heads=args.n_heads, reversible=True,
-    #                                 axial_pos_emb_shape=None)
-    encoder = CC_Trans(n_layers=args.n_layer, feature_size=[args.feat_size, args.feat_size, args.encoder_dim])
+    encoder = Adjust_Trans(n_layers=args.n_layer, feature_size=[args.feat_size, args.feat_size, args.encoder_dim])
 
     # Caption Generator
-    generator = Decoder_Generator(encoder_dim=args.encoder_dim, feature_dim=args.feature_dim, vocab_size=len(word_map),
+    generator = LightDecoderGenerator(encoder_dim=args.encoder_dim, feature_dim=args.feature_dim, vocab_size=len(word_map),
                                   max_lengths=args.max_length, word_vocab=word_map, n_head=args.n_heads,
                                   n_layers=args.decoder_n_layers, dropout=args.dropout)
 
@@ -68,7 +65,7 @@ def main(args):
     encoder = encoder.cuda()
     generator = generator.cuda()
 
-    # Parameters Info Print
+    # Nets Info Print
     print("------------Checkpoint-SavePath------------{}".format(args.save_path))
     print("------------extractor_CNN------------{}".format(args.cnn_net))
     print("------------encoder_Transformer------------{}".format('encoder'))
@@ -96,18 +93,29 @@ def main(args):
         print("----------val_dataloader length-------------{}".format(len(valid_dataloader)))
 
     elif args.data_name == 'Dubai_CC':
-        train_dataloader = Dubai_CC_DataLoader(args.list_path, word_map, args.batch_size, args.num_workers)
-        valid_dataloader = Dubai_CC_DataLoader(args.list_path, word_map, args.batch_size, args.num_workers)
+        train_dataloader = data.DataLoader(
+            DubaiCCDataset(args.data_folder, args.list_path, 'train', args.token_folder, args.vocab_file,
+                           args.max_length, args.allow_unk), batch_size=args.train_batch_size, shuffle=True,
+            num_workers=args.num_workers, pin_memory=True)
+        valid_dataloader = data.DataLoader(
+            DubaiCCDataset(args.data_folder, args.list_path, 'val', args.token_folder, args.vocab_file,
+                           args.max_length, args.allow_unk), batch_size=args.valid_batch_size, shuffle=False,
+            num_workers=args.num_workers, pin_memory=True)
 
     extractor_lr_scheduler = torch.optim.lr_scheduler.StepLR(extractor_optimizer, step_size=1, gamma=0.95)
     encoder_lr_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=1, gamma=0.95)
     generator_lr_scheduler = torch.optim.lr_scheduler.StepLR(generator_optimizer, step_size=1, gamma=0.95)
+
+    l_resizeA = torch.nn.Upsample(size=(256, 256), mode='bilinear', align_corners=True)
+    l_resizeB = torch.nn.Upsample(size=(256, 256), mode='bilinear', align_corners=True)
 
     # track metric variable
     index_i = 0
     hist = np.zeros((args.num_epochs * len(train_dataloader), 3))
 
     # Start Training
+
+    max_memory = 0
     for epoch in range(start_epoch, args.num_epochs):
         for id, (imgA, imgB, _, _, token, token_len, _) in enumerate(train_dataloader):
             start_time = time.time()
@@ -123,7 +131,9 @@ def main(args):
             # Move Data to GPU
             imgA = imgA.cuda()
             imgB = imgB.cuda()
-
+            if args.data_name == 'Dubai_CC':
+                imgA = l_resizeA(imgA)
+                imgB = l_resizeB(imgB)
             token = token.squeeze(1).cuda()
             token_len = token_len.cuda()
 
@@ -160,6 +170,9 @@ def main(args):
             hist[index_i, 2] = accuracy(scores, targets, 5)
             index_i += 1
 
+
+
+
             # Print status
             if index_i % args.print_freq == 0:
                 print('Epoch: [{0}][{1}/{2}]\t'
@@ -171,6 +184,11 @@ def main(args):
                                                        np.mean(hist[index_i - args.print_freq:index_i - 1, 1]),
                                                        np.mean(hist[index_i - args.print_freq:index_i - 1, 2])))
 
+        # current_memory = torch.cuda.memory_allocated(device) / (1024 ** 3)  # in GB
+        # max_memory = torch.cuda.max_memory_allocated(device) / (1024 ** 3)  # in GB
+        # print(f"Epoch {epoch + 1}/{args.num_epochs} - GPU Memory Usage: {current_memory:.2f}GB, Peak Memory Usage: "
+        #       f"{max_memory:.2f}GB")
+        # torch.cuda.reset_max_memory_allocated(device)
         # Per epoch's validation
         if extractor is not None:
             extractor.eval()
@@ -186,7 +204,9 @@ def main(args):
                 # Move to GPU
                 imgA = imgA.cuda()
                 imgB = imgB.cuda()
-
+                if args.data_name == 'Dubai_CC':
+                    imgA = l_resizeA(imgA)
+                    imgB = l_resizeB(imgB)
                 token_all = token_all.squeeze(0).cuda()
 
                 if extractor is not None:
@@ -258,23 +278,23 @@ def main(args):
 
             model_name = (str(args.data_name) + '_BatchSize' + '_' + str(args.train_batch_size) + '_' +
                           str(args.cnn_net) + '_' + 'Bleu-4' + '_' +
-                          str(round(10000 * best_bleu4)) + '.pth')
+                          str(round(10000 * best_bleu4)) + '_' + str(args.n_layer) + '_' + '1024' + 'test' + '.pth')
             torch.save(state, os.path.join(args.save_path, model_name))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='A lite model for remote sensing change2captioning')
+    parser = argparse.ArgumentParser(description='A sparse model for remote sensing change2captioning')
 
     # LEVIR-CC paramters
     parser.add_argument("--gpu_id", type=int, default=0, help='gpu id of the devices')
     parser.add_argument("--save_path", type=str, default='./checkpoints', help='path to save checkpoints')
     parser.add_argument("--fine_tune", type=bool, default=True, help='fine tune cnn')
-    parser.add_argument("--n_layer", type=int, default=2, help='number of layers')
+    parser.add_argument("--n_layer", type=int, default=1, help='number of layers')
     parser.add_argument("--d_model", type=int, default=512, help='dimension of model')
     parser.add_argument("--n_heads", type=int, default=8, help='number of heads')
     parser.add_argument("--vocab_file", type=str, default='vocab', help='vocab file')
     parser.add_argument("--data_name", type=str, default='LEVIR_CC', help='data name')
-    parser.add_argument("--cnn_net", default='resnet101', help='extractor network')
+    parser.add_argument("--cnn_net", default='vgg', help='extractor network')
     parser.add_argument("--encoder_dim", type=int, default=2048, help='the dim of extracted features by diff nets')
     parser.add_argument("--feature_dim", type=int, default=2048)
     parser.add_argument("--feat_size", type=int, default=16)
@@ -294,5 +314,18 @@ if __name__ == '__main__':
     parser.add_argument("--print_freq", type=int, default=100, help='print frequency')
     parser.add_argument("--dropout", type=float, default=0.1, help='dropout')
     parser.add_argument("--decoder_n_layers", type=int, default=1)
+
+    ####################################################################################################################
+    # Dubai_CC Parameters
+
+    # parser.add_argument('--data_folder', default='/home/sdw/paper_projects/Lite_Chag2cap/data/Dubai_CC/images',
+    #                     help='folder with data files')
+    # parser.add_argument('--list_path', default='./data/Dubai_CC/', help='path of the data lists')
+    # parser.add_argument('--token_folder', default='./data/Dubai_CC/tokens/', help='folder with token files')
+    # parser.add_argument('--vocab_file', default='vocab', help='path of the data lists')
+    # parser.add_argument('--max_length', type=int, default=27, help='path of the data lists')
+    # parser.add_argument('--allow_unk', type=int, default=0, help='if unknown token is allowed')
+    # parser.add_argument('--data_name', default="Dubai_CC", help='base name shared by data files.')
+
     args = parser.parse_args()
     main(args)

@@ -1,0 +1,1 @@
+[["<START>", "There", "is", "no", "difference", "in", "this", "area", "<END>"], ["<START>", "No", "change", "occurred", "<END>"], ["<START>", "There", "is", "no", "difference", "in", "this", "area", "<END>"], ["<START>", "Everything", "remains", "the", "same", "<END>"], ["<START>", "Nothing", "has", "changed", "<END>"]]
