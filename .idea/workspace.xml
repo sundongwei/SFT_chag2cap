@@ -5,10 +5,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5b55e34-f3f9-41fa-ba9d-2e7be2286704" name="Changes" comment="v1.0">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/AdjustLength_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/AdjustLength_net.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Lite_Chag2cap.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/other.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/caption.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/bleu/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/bleu/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/bleu/bleu.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/bleu/bleu_scorer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/cider/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/cider/cider.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/cider/cider_scorer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/meteor/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/meteor/meteor-1.5.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/meteor/meteor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/rouge/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_func/rouge/rouge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval_results/resnet101_sparse_CCNet_generator.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/AdjustLength_net.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/CNN_Nets.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/model_decoder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/preprocess_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/DubaiCC.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/LEVIR_CC_Data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/utils.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -360,7 +389,7 @@
       <workItem from="1721271148289" duration="3500000" />
       <workItem from="1721302982899" duration="17000" />
       <workItem from="1723428473318" duration="9717000" />
-      <workItem from="1723705635941" duration="3433000" />
+      <workItem from="1723705635941" duration="4329000" />
     </task>
     <task id="LOCAL-00001" summary="upload1">
       <option name="closed" value="true" />
