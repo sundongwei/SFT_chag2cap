@@ -5,16 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5b55e34-f3f9-41fa-ba9d-2e7be2286704" name="Changes" comment="v1.0">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Lite_Chag2cap.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Lite_Chag2cap.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/aws.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/sdw.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/CNN_Nets.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/CNN_Nets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/model_decoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/model_decoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/model_encoder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/AdjustLength_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/AdjustLength_net.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -39,14 +32,17 @@
     &quot;assignee&quot;: &quot;sundongwei&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/sundongwei/SFT_chag2cap.git",
-    "accountId": "0aaf435a-5f39-4a36-b957-492c3655ada2"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/sundongwei/SFT_chag2cap.git&quot;,
+    &quot;accountId&quot;: &quot;0aaf435a-5f39-4a36-b957-492c3655ada2&quot;
   }
-}]]></component>
+}</component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="PerforceDirect.Settings">
+    <option name="CHARSET" value="无" />
   </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
@@ -62,44 +58,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.Cal_FLOPs.executor&quot;: &quot;Run&quot;,
-    &quot;Python.DubaiCC.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Infer.executor&quot;: &quot;Run&quot;,
-    &quot;Python.LEVIR_CC_Data.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.Scatter_Plot.executor&quot;: &quot;Run&quot;,
-    &quot;Python.caption.executor&quot;: &quot;Run&quot;,
-    &quot;Python.change_heat.executor&quot;: &quot;Run&quot;,
-    &quot;Python.count_params.executor&quot;: &quot;Run&quot;,
-    &quot;Python.feature_visual.executor&quot;: &quot;Run&quot;,
-    &quot;Python.heatmap.executor&quot;: &quot;Run&quot;,
-    &quot;Python.heatmapv2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.model_decoder.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_example.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/sdw/Documents/sss&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Cal_FLOPs.executor": "Run",
+    "Python.DubaiCC.executor": "Run",
+    "Python.Infer.executor": "Run",
+    "Python.LEVIR_CC_Data.executor": "Debug",
+    "Python.Scatter_Plot.executor": "Run",
+    "Python.caption.executor": "Run",
+    "Python.change_heat.executor": "Run",
+    "Python.count_params.executor": "Run",
+    "Python.feature_visual.executor": "Run",
+    "Python.heatmap.executor": "Run",
+    "Python.heatmapv2.executor": "Run",
+    "Python.model_decoder.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.test_example.executor": "Run",
+    "Python.train.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/home/sdw/paper_projects/RSICC",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;ChangesTree.GroupingKeys&quot;: [
-      &quot;directory&quot;
+  "keyToStringList": {
+    "ChangesTree.GroupingKeys": [
+      "directory"
     ],
-    &quot;stardust.markdown.MarkdownSplitEditorSuppressor:keyList&quot;: []
+    "stardust.markdown.MarkdownSplitEditorSuppressor:keyList": []
   }
-}</component>
+}]]></component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings module-name="Lite_Chag2cap" is-module-sdk="true">
@@ -364,6 +360,7 @@
       <workItem from="1721271148289" duration="3500000" />
       <workItem from="1721302982899" duration="17000" />
       <workItem from="1723428473318" duration="9717000" />
+      <workItem from="1723705635941" duration="3433000" />
     </task>
     <task id="LOCAL-00001" summary="upload1">
       <option name="closed" value="true" />

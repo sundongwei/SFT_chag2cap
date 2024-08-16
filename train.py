@@ -294,7 +294,7 @@ if __name__ == '__main__':
     parser.add_argument("--n_heads", type=int, default=8, help='number of heads')
     parser.add_argument("--vocab_file", type=str, default='vocab', help='vocab file')
     parser.add_argument("--data_name", type=str, default='LEVIR_CC', help='data name')
-    parser.add_argument("--cnn_net", default='vgg', help='extractor network')
+    parser.add_argument("--cnn_net", default='resnet101', help='extractor network')
     parser.add_argument("--encoder_dim", type=int, default=2048, help='the dim of extracted features by diff nets')
     parser.add_argument("--feature_dim", type=int, default=2048)
     parser.add_argument("--feat_size", type=int, default=16)
