@@ -1,1 +1,0 @@
-[["<START>", "The", "river", "was", "extended", "<END>"], ["<START>", "The", "shore", "left", "the", "place", "to", "the", "river", "<END>"], ["<START>", "The", "coast", "left", "the", "place", "to", "the", "river", "<END>"], ["<START>", "A", "green", "area", "appears", "near", "the", "coast", "<END>"], ["<START>", "New", "park", "is", "present", "in", "the", "area", "<END>"]]

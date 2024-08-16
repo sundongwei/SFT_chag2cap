@@ -1,1 +1,0 @@
-[["<START>", "The", "crossroads", "was", "extended", "<END>"], ["<START>", "The", "intersection", "increased", "in", "size", "<END>"], ["<START>", "The", "road", "crossing", "was", "extended", "<END>"], ["<START>", "A", "new", "road", "crosses", "the", "old", "one", "perpendicularly", "<END>"], ["<START>", "The", "size", "of", "the", "crossroads", "has", "increased", "<END>"]]

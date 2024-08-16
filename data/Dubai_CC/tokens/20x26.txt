@@ -1,1 +1,0 @@
-[["<START>", "A", "residence", "was", "built", "<END>"], ["<START>", "A", "residence", "was", "realized", "<END>"], ["<START>", "A", "big", "residence", "has", "been", "created", "<END>"], ["<START>", "Some", "new", "buildings", "appear", "in", "the", "desert", "<END>"], ["<START>", "New", "constructions", "are", "present", "in", "the", "area", "<END>"]]

@@ -4,5 +4,4 @@ Example/A/
 Example/B/
 data/
 model_checkpoints/
-eval_func/meteor/data/paraphrase-en.gz
-eval_func/meteor/data/paraphrase-en-clean
+eval_func/meteor/data/

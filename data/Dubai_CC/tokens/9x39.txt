@@ -1,1 +1,0 @@
-[["<START>", "The", "area", "was", "urbanized", "<END>"], ["<START>", "The", "park", "on", "the", "left", "was", "extended", "<END>"], ["<START>", "The", "urbanized", "area", "was", "extended", "<END>"], ["<START>", "The", "area", "is", "further", "urbanized", "<END>"], ["<START>", "New", "buildings", "appeared", "in", "the", "area", "<END>"]]

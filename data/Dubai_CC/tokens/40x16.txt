@@ -1,1 +1,0 @@
-[["<START>", "Some", "streets", "were", "realized", "<END>"], ["<START>", "Some", "roads", "appeared", "in", "the", "desert", "<END>"], ["<START>", "This", "area", "was", "urbanized", "<END>"], ["<START>", "An", "urban", "area", "appears", "in", "the", "desert", "<END>"], ["<START>", "The", "desert", "left", "the", "place", "to", "urbanization", "<END>"]]

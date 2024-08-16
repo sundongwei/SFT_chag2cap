@@ -1,1 +1,0 @@
-[["<START>", "The", "shore", "was", "extended", "<END>"], ["<START>", "The", "coast", "was", "extended", "<END>"], ["<START>", "The", "shore", "has", "been", "extended", "<END>"], ["<START>", "The", "coast", "appears", "bigger", "<END>"], ["<START>", "The", "shore", "has", "increased", "in", "size", "<END>"]]

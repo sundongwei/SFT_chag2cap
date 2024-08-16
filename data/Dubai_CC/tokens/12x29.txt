@@ -1,1 +1,0 @@
-[["<START>", "The", "airport", "was", "extended", "<END>"], ["<START>", "The", "airport", "roads", "have", "been", "extended", "<END>"], ["<START>", "The", "airport", "increased", "its", "size", "<END>"], ["<START>", "The", "airport", "is", "further", "extended", "in", "the", "area", "<END>"], ["<START>", "The", "size", "of", "the", "airport", "has", "increased", "<END>"]]
