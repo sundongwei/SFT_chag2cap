@@ -3,7 +3,7 @@ Remote Sensing Image Change Captioning</h1>
 
 
 
-![](Figure/Flowchart.png)
+![](figs/overview.png)
     
 This is the official PyTorch implementation of **[A Lightweight Sparse Focus Transformer for
 Remote Sensing Image Change Captioning](https://arxiv.org/pdf/2405.06598)**.
