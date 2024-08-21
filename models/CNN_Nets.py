@@ -4,8 +4,10 @@
 # @Author   : Sun Dongwei
 # @File     : CNN_Nets.py
 import torch
+import timm
 import torch.nn as nn
 import torchvision.models as models
+import torchvision.transforms as transforms
 
 
 class Con_Net(nn.Module):
@@ -34,12 +36,14 @@ class Con_Net(nn.Module):
             cnn.features[41] = nn.BatchNorm2d(2048)
             modules = list(cnn.children())[:-2]
 
+    
         self.cnn = nn.Sequential(*modules)
         self.fine_tuning()
 
     def forward(self, imageA, imageB):
         featureA = self.cnn(imageA)
         featureB = self.cnn(imageB)
+
 
         return featureA, featureB
 

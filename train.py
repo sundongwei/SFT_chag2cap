@@ -17,7 +17,7 @@ from utils.LEVIR_CC_Data import LEVIR_CC_Dataset
 from utils.DubaiCC import DubaiCCDataset
 from torch.nn.utils.rnn import pack_padded_sequence
 from utils.utils import get_eval_score, accuracy
-from models.CNN_Nets import Con_Net
+from models.CNN_Nets import Con_Net 
 from models.model_decoder import LightDecoderGenerator
 from models.AdjustLength_net import Adjust_Trans
 
@@ -136,7 +136,8 @@ def main(args):
                 imgB = l_resizeB(imgB)
             token = token.squeeze(1).cuda()
             token_len = token_len.cuda()
-
+            #===========================================
+            
             feat_A, feat_B = extractor(imgA, imgB)
             feat_A, feat_B = encoder(feat_A, feat_B)
             score, caps_sorted, decode_lengths, sort_ind = generator(feat_A, feat_B, token, token_len)
@@ -303,7 +304,7 @@ if __name__ == '__main__':
     parser.add_argument("--token_folder", type=str, default='./data/LEVIR_CC/tokens/', help='token files path')
     parser.add_argument("--max_length", type=int, default=41, help='max length of each caption sentence')
     parser.add_argument("--allow_unknown", type=int, default=1, help='whether unknown tokens are allowed')
-    parser.add_argument("--train_batch_size", type=int, default=32, help='batch size of training')
+    parser.add_argument("--train_batch_size", type=int, default=16, help='batch size of training')
     parser.add_argument("--valid_batch_size", type=int, default=1, help='batch size of validation')
     parser.add_argument("--num_workers", type=int, default=8, help='to accelerate data load')
     parser.add_argument("--cnn_lr", type=float, default=1e-4, help='cnn learning rate')

@@ -1,7 +1,6 @@
-checkpoints/
+checkpoints/*
 supplemental/
-Example/A/
-Example/B/
-data/
+data/*
 model_checkpoints/
 eval_func/meteor/data
+vit.py

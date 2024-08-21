@@ -212,7 +212,7 @@ if __name__ == '__main__':
     #                     help='path to checkpoint, None if none.')
 
     parser.add_argument('--checkpoint',
-                        default='/home/sdw/paper_projects/Lite_Chag2cap/checkpoints/LEVIR_CC_BatchSize_32_resnet101_Bleu-4_6219_1_1024test.pth',
+                        default='/home/sdw/paper_projects/Lite_Chag2cap/checkpoints/LEVIR_CC_BatchSize_16_resnet101_Bleu-4_5868_1_1024test.pth',
                         help='path to checkpoint, None if none.')
     parser.add_argument('--network', default='resnet101', help='define the encoder to extract features:resnet101,vgg16')
     parser.add_argument('--gpu_id', type=int, default=0, help='gpu id in the training.')

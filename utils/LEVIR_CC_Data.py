@@ -8,10 +8,11 @@ import json
 import numpy as np
 from imageio.v3 import imread
 from torch.utils.data import Dataset, DataLoader
-
+from PIL import Image
 import os
 
 from preprocess_data import token_encode_process
+import torchvision.transforms as transforms
 
 
 class LEVIR_CC_Dataset(Dataset):
@@ -90,15 +91,23 @@ class LEVIR_CC_Dataset(Dataset):
                     "token_id": token_id,
                     "img_detail": img_detail
                 })
-
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),  # 转换为tensor并归一化到[0, 1]
+        ])
+        
+        
     def __getitem__(self, index):
         datafiles = self.files[index]
         img_detail = datafiles["img_detail"]
         img_A = imread(datafiles["img_A"])
         img_B = imread(datafiles["img_B"])
-
+        
+        
         img_A = np.asarray(img_A, np.float32)
         img_B = np.asarray(img_B, np.float32)
+
+
 
         img_A = np.moveaxis(img_A, -1, 0)
         img_B = np.moveaxis(img_B, -1, 0)
