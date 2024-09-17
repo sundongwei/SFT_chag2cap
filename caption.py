@@ -15,7 +15,7 @@ import json
 from imageio.v3 import imread
 
 from models.CNN_Nets import Con_Net
-from models.AdjustLength_net import CC_Trans
+from models.AdjustLength_net import Adjust_Trans
 from models.model_decoder import Decoder_Generator
 
 from torchcam.methods import SmoothGradCAMpp
@@ -55,7 +55,7 @@ def main(args):
         # Load Model
         extractor = Con_Net(args.network)
 
-        encoder = CC_Trans(n_layers=args.n_layers, feature_size=[args.feat_size, args.feat_size, args.encoder_dim])
+        encoder = Adjust_Trans(n_layers=args.n_layers, feature_size=[args.feat_size, args.feat_size, args.encoder_dim])
 
         decoder = Decoder_Generator(encoder_dim=args.encoder_dim, feature_dim=args.feature_dim, vocab_size=len(word_map),
                                     max_lengths=args.max_length, word_vocab=word_map, n_head=args.n_heads,
