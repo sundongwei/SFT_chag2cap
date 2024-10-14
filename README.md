@@ -20,7 +20,7 @@ Remote Sensing Image Change Captioning](https://arxiv.org/pdf/2405.06598)**.
         ├─LevirCCcaptions.json
         ├─images
              ├─train
-             │  ├─A()
+             │  ├─A
              │  ├─B
              ├─val
              │  ├─A
@@ -74,12 +74,16 @@ Remote Sensing Image Change Captioning](https://arxiv.org/pdf/2405.06598)**
 Please cite the following paper if you find it useful for your research:
 
 ```
-@article{sun2024lightweight,
-  title={A Lightweight Transformer for Remote Sensing Image Change Captioning},
-  author={Sun, Dongwei and Bao, Yajie and Cao, Xiangyong},
-  journal={arXiv preprint arXiv:2405.06598},
-  year={2024}
-}
+@ARTICLE{10700970,
+  author={Sun, Dongwei and Bao, Yajie and Liu, Junmin and Cao, Xiangyong},
+  journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing}, 
+  title={A Lightweight Sparse Focus Transformer for Remote Sensing Image Change Captioning}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={1-12},
+  doi={10.1109/JSTARS.2024.3471625}}
+
 ```
 
 ### Acknowledgement
