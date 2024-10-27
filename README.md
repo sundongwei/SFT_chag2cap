@@ -79,11 +79,11 @@ Please cite the following paper if you find it useful for your research:
   journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing}, 
   title={A Lightweight Sparse Focus Transformer for Remote Sensing Image Change Captioning}, 
   year={2024},
-  volume={},
+  volume={17},
   number={},
-  pages={1-12},
+  pages={18727-18738},
+  keywords={Transformers;Feature extraction;Remote sensing;Kernel;Attention mechanisms;Accuracy;Sensors;Convolutional neural networks;Computational modeling;Visualization;Change captioning;remote sensing image change detection;sparse attention;transformer encoder},
   doi={10.1109/JSTARS.2024.3471625}}
-
 ```
 
 ### Acknowledgement
